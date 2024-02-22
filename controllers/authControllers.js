@@ -104,7 +104,6 @@ const updateAvatar = async (req, res) => {
   await jimpAvatar.resize(250, 250).write(tmpPath);
 
   await fs.rename(tmpPath, newPath);
-  // const newAvatar = path.join("public", "avatars", filename);
 
   const result = await User.findByIdAndUpdate(
     _id,
