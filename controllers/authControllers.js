@@ -3,6 +3,10 @@ const HttpError = require("../helpers/HttpError");
 const controllerWrapper = require("../helpers/controllerWrapper");
 const User = require("../models/users");
 const jwt = require("jsonwebtoken");
+const gravatar = require("gravatar");
+const fs = require("fs/promises");
+const path = require("path");
+const Jimp = require("jimp");
 
 const dotenv = require("dotenv");
 dotenv.config();
@@ -10,15 +14,21 @@ const { JWT_SECRET } = process.env;
 
 const register = async (req, res) => {
   try {
-    const { password } = req.body;
+    const { password, email } = req.body;
     const hashPassword = await bcrypt.hash(password, 10);
+    const avatarURL = gravatar.url(email);
 
-    const newUser = await User.create({ ...req.body, password: hashPassword });
+    const newUser = await User.create({
+      ...req.body,
+      avatarURL,
+      password: hashPassword,
+    });
 
     res.status(201).json({
       user: {
         email: newUser.email,
         subscription: newUser.subscription,
+        avatarURL: newUser.avatarURL,
       },
     });
   } catch (error) {
@@ -78,10 +88,42 @@ const updateSubscription = async (req, res) => {
   res.status(200).json(result);
 };
 
+const updateAvatar = async (req, res) => {
+  const { _id } = req.user;
+
+  if (!req.file) {
+    throw HttpError(400, "No file was provided for upload!");
+  }
+
+  const { filename } = req.file;
+
+  const tmpPath = path.resolve("tmp", filename);
+  const newPath = path.resolve("public", "avatars", filename);
+
+  const jimpAvatar = await Jimp.read(tmpPath);
+  await jimpAvatar.resize(250, 250).write(tmpPath);
+
+  await fs.rename(tmpPath, newPath);
+  // const newAvatar = path.join("public", "avatars", filename);
+
+  const result = await User.findByIdAndUpdate(
+    _id,
+    { avatarURL: newPath },
+    { new: true }
+  );
+  if (!result) {
+    throw HttpError(404);
+  }
+  res.status(200).json({
+    avatarURL: result.avatarURL,
+  });
+};
+
 module.exports = {
   register: controllerWrapper(register),
   login: controllerWrapper(login),
   getCurrent: controllerWrapper(getCurrent),
   logout: controllerWrapper(logout),
   updateSubscription: controllerWrapper(updateSubscription),
+  updateAvatar: controllerWrapper(updateAvatar),
 };
