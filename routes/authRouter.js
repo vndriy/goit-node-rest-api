@@ -1,7 +1,8 @@
 const express = require("express");
 const validateBody = require("../helpers/validateBody.js");
 const authenticate = require("../helpers/authenticate.js");
-const isValid = require("../helpers/isValid.js");
+// const isValid = require("../helpers/isValid.js");
+const upload = require("../helpers/upload.js");
 
 const {
   registerUserSchema,
@@ -14,6 +15,7 @@ const {
   getCurrent,
   logout,
   updateSubscription,
+  updateAvatar,
 } = require("../controllers/authControllers.js");
 
 const authRouter = express.Router();
@@ -28,6 +30,12 @@ authRouter.patch(
   authenticate,
   validateBody(updateSubscriptionSchema),
   updateSubscription
+);
+authRouter.patch(
+  "/avatars",
+  authenticate,
+  upload.single("avatarURL"),
+  updateAvatar
 );
 
 module.exports = authRouter;
