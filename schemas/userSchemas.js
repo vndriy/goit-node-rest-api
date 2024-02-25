@@ -21,8 +21,15 @@ const updateSubscriptionSchema = Joi.object({
     }),
 });
 
+const emailSchema = Joi.object({
+  email: Joi.string()
+    .regex(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/)
+    .required(),
+});
+
 module.exports = {
   registerUserSchema,
   loginUserSchema,
   updateSubscriptionSchema,
+  emailSchema,
 };

@@ -1,13 +1,13 @@
 const express = require("express");
 const validateBody = require("../helpers/validateBody.js");
 const authenticate = require("../helpers/authenticate.js");
-// const isValid = require("../helpers/isValid.js");
 const upload = require("../helpers/upload.js");
 
 const {
   registerUserSchema,
   loginUserSchema,
   updateSubscriptionSchema,
+  emailSchema,
 } = require("../schemas/userSchemas");
 const {
   register,
@@ -16,11 +16,16 @@ const {
   logout,
   updateSubscription,
   updateAvatar,
+  verify,
+  resendVerify,
 } = require("../controllers/authControllers.js");
 
 const authRouter = express.Router();
 
 authRouter.post("/register", validateBody(registerUserSchema), register);
+authRouter.get("/verify/:verificationToken", verify);
+authRouter.post("/verify", validateBody(emailSchema), resendVerify);
+
 authRouter.post("/login", validateBody(loginUserSchema), login);
 
 authRouter.post("/logout", authenticate, logout);
